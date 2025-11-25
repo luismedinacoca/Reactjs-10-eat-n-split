@@ -82,5 +82,114 @@ const Friend = ({ friend }) => {
 export default Friend;
 ```
 
+## 📚 Lecture 097: Building the Static App: Forms
+
+### 1. Create **`Button`** component:
+```jsx
+/* src/common/Button.jsx */
+const Button = ({ children }) => {
+  return <button className="button">{children}</button>;
+};
+export default Button;
+```
+
+### 2. Create **`FormAddFriend`** component:
+```jsx
+/* src/components/FormAddFriend.jsx */
+import Button from "../common/Button";
+const FormAddFriend = () => {
+  return (
+    <form className="form-add-friend">
+      <label>👫 Friend name</label>
+      <input type="text" />
+
+      <label>🌄 Image URL</label>
+      <input type="text" />
+      <Button>Add</Button>
+    </form>
+  );
+};
+export default FormAddFriend;
+```
+
+### 3. Add `FormAddFriend` & `Button` for "Add Friend" components into  **`App.jsx`**
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+function App() {
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList />
+        <FormAddFriend />
+        <Button>Add Friend</Button>
+      </div>
+    </div>
+  );
+}
+
+export default App;
+```
+
+
+### 4. Create **`FormSplitBill`** component:
+```jsx
+/* src/components/FormSplitBill.jsx */
+import Button from "../common/Button";
+const FormSplitBill = () => {
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with X</h2>
+
+      <label>💰 Bill value</label>
+      <input type="text" />
+
+      <label>🙋🏽‍♂️ Your expense</label>
+      <input type="text" />
+
+      <label>👥 X's expense</label>
+      <input type="text" disabled />
+
+      <label>🤑 Who is paying the bill?</label>
+      <select>
+        <option value="user">You</option>
+        <option value="friend">X</option>
+      </select>
+
+      <Button>Split Bill</Button>
+    </form>
+  );
+};
+export default FormSplitBill;
+```
+
+### 5. Import **`FormSplitBill`** to **`App`**:
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+function App() {
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList />
+        <FormAddFriend />
+        <Button>Add Friend</Button>
+      </div>
+      <FormSplitBill />
+    </div>
+  );
+}
+export default App;
+```
+
+### 6. Static App:
+<img src="../img/section08-lecture097-001.png">
+
+
 ## 📚 Lecture 0
 ## 📚 Lecture 0
