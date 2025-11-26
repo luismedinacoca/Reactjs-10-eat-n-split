@@ -191,5 +191,73 @@ export default App;
 <img src="../img/section08-lecture097-001.png">
 
 
+## 📚 Lecture 098: Displaying the New Friend Form
+
+### 1. Add a state variable in **`App.jsx`** component:
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+import { useState } from "react";  // 👈🏽 ✅
+function App() {
+  const [showAddFriend, setShowAddFriend] = useState(true);  // 👈🏽 ✅
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList />
+        {showAddFriend && <FormAddFriend />}  // 👈🏽 ✅
+        <Button>{showAddFriend ? "Close" : "Add Friend"}</Button>  // 👈🏽 ✅
+      </div>
+      <FormSplitBill />
+    </div>
+  );
+}
+export default App;
+```
+
+### 2. Add **`onClick()`** function as prop in **`Button`** component:
+```jsx
+/* src/common/Button.jsx */
+const Button = ({ children, onClick }) => {  // 👈🏽 ✅
+  return (
+    <button className="button" onClick={onClick}>  // 👈🏽 ✅
+      {children}
+    </button>
+  );
+};
+export default Button;
+```
+
+### 3. Apply this **`onClick`** function prop from **`App`** creating **`handleShowAddFriend`** function:
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+import { useState } from "react";
+function App() {
+  const [showAddFriend, setShowAddFriend] = useState(true);
+  const handleShowAddFriend = () => {  // 👈🏽 ✅
+    setShowAddFriend(!showAddFriend);
+  };
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList />
+        {showAddFriend && <FormAddFriend />}
+        <Button onClick={handleShowAddFriend}>{showAddFriend ? "Close" : "Add Friend"}</Button>  // 👈🏽 ✅
+      </div>
+      <FormSplitBill />
+    </div>
+  );
+}
+export default App;
+```
+
+<img src="../img/section08-lecture098-001.png">
+<img src="../img/section08-lecture098-002.png">
 ## 📚 Lecture 0
 ## 📚 Lecture 0
