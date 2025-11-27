@@ -259,5 +259,300 @@ export default App;
 
 <img src="../img/section08-lecture098-001.png">
 <img src="../img/section08-lecture098-002.png">
+
+## 📚 Lecture 099: Adding a New Friend
+
+### 1. Add **`name`** and **`image`** as new state in **`FormAddFriend`**:
+```jsx
+/* src/components/FormAddFriend.jsx */
+import Button from "../common/Button";
+import { useState } from "react";  // 👈🏽 ✅
+const FormAddFriend = () => {
+  const [name, setName] = useState("");  // 👈🏽 ✅
+  const [image, setImage] = useState("https://i.pravatar.cc/48");  // 👈🏽 ✅
+  return (
+    <form className="form-add-friend">
+      <label>👫 Friend name</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />  // 👈🏽 ✅
+
+      <label>🌄 Image URL</label>
+      <input type="text" value={image} onChange={(e) => setImage(e.target.value)} />  // 👈🏽 ✅
+      <Button>Add</Button>
+    </form>
+  );
+};
+export default FormAddFriend;
+```
+
+### 2. Add the **`onSubmit`** method and define the **`handleSubmit`** function:
+```jsx
+/* src/components/FormAddFriend.jsx */
+import Button from "../common/Button";
+import { useState } from "react";
+const FormAddFriend = () => {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("https://i.pravatar.cc/48");
+
+  const handleSubmit = (e) => {  // 👈🏽 ✅
+    e.preventDefault(); // prevent the default behavior of the form
+
+    //create new id:
+    const id = crypto.randomUUID();
+
+    //create new friend object:
+    const newFriend = {
+      id,
+      name,
+      image: `${image}?=${id}`,
+      balance: 0,
+    };
+    console.log(newFriend);
+
+    //Set the input values to the default state:
+    setName("");
+    setImage("https://i.pravatar.cc/48");
+  };
+  return (
+    <form className="form-add-friend" onSubmit={handleSubmit}>  // 👈🏽 ✅
+      <label>👫 Friend name</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+
+      <label>🌄 Image URL</label>
+      <input type="text" value={image} onChange={(e) => setImage(e.target.value)} />
+      <Button>Add</Button>
+    </form>
+  );
+};
+export default FormAddFriend;
+```
+
+> 🔥 Issue:
+* Create a new friend without neither `name` nor `image` nor both.
+
+<img src="../img/section08-lecture099-001.png">
+
+### 3. Validate **`name`** and **`image`** inputs:
+```jsx
+import Button from "../common/Button";
+import { useState } from "react";
+const FormAddFriend = () => {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("https://i.pravatar.cc/48");
+
+  const handleSubmit = (e) => {
+    e.preventDefault(); // prevent the default behavior of the form
+
+    //validation: if the name or image is empty, return
+    if (!name || !image) return;  // 👈🏽 ✅
+
+    //create new id:
+    const id = crypto.randomUUID();
+    //create new friend object:
+    const newFriend = {
+      id,
+      name,
+      image: `${image}?=${id}`,
+      balance: 0,
+    };
+    console.log(newFriend);
+    //Set the input values to the default state:
+    setName("");
+    setImage("https://i.pravatar.cc/48");
+  };
+  return (
+    <form className="form-add-friend" onSubmit={handleSubmit}>
+      <label>👫 Friend name</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+
+      <label>🌄 Image URL</label>
+      <input type="text" value={image} onChange={(e) => setImage(e.target.value)} />
+      <Button>Add</Button>
+    </form>
+  );
+};
+export default FormAddFriend;
+```
+
+> 🔥 Issue:
+- How add new friend to the friend list?
+
+<img src="../img/section08-lecture099-002.png">
+
+### 4. Lifting new friend up:
+
+#### 1. move **`initialFriends`** array from **`src/components/FriendsList.jsx`** to **`src/App.jsx`**:
+Add a new state: `friends`   👈🏽 ✅
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+import { useState } from "react";
+
+const initialFriends = [  // 👈🏽 ✅
+  {
+    id: 118836,
+    name: "Clark",
+    image: "https://i.pravatar.cc/48?u=118836",
+    balance: -7,
+  },
+  {
+    id: 933372,
+    name: "Sarah",
+    image: "https://i.pravatar.cc/48?u=933372",
+    balance: 20,
+  },
+  {
+    id: 499476,
+    name: "Anthony",
+    image: "https://i.pravatar.cc/48?u=499476",
+    balance: 0,
+  },
+];
+function App() {
+  const [friends, setFriends] = useState(initialFriends);  // 👈🏽 ✅
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const handleShowAddFriend = () => {
+    setShowAddFriend(!showAddFriend);
+  };
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList friends={friends} />  // 👈🏽 ✅
+        {showAddFriend && <FormAddFriend />}
+        <Button onClick={handleShowAddFriend}>{showAddFriend ? "Close" : "Add Friend"}</Button>
+      </div>
+      <FormSplitBill />
+    </div>
+  );
+}
+
+export default App;
+```
+
+Passing new prop as `friends` and delete the `initialFriends` array:
+```jsx
+/* src/components/FriendsList.jsx */
+import Friend from "./Friend";
+
+const FriendsList = ({ friends }) => {  // 👈🏽 ✅
+  return (
+    <ul>
+      {friends.map((friend) => (
+        <Friend key={friend.id} friend={friend} />
+      ))}
+    </ul>
+  );
+};
+export default FriendsList;
+```
+
+#### 2. Handle the `AddFriend` process:
+
+1. create `handleAddFriend` function in `App.jsx` component:
+
+    > (App component has the `friends` state, so the setFriends must be done from here)
+
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+import { useState } from "react";
+
+const initialFriends = [
+  {
+    id: 118836,
+    name: "Clark",
+    image: "https://i.pravatar.cc/48?u=118836",
+    balance: -7,
+  },
+  {
+    id: 933372,
+    name: "Sarah",
+    image: "https://i.pravatar.cc/48?u=933372",
+    balance: 20,
+  },
+  {
+    id: 499476,
+    name: "Anthony",
+    image: "https://i.pravatar.cc/48?u=499476",
+    balance: 0,
+  },
+];
+function App() {
+  const [friends, setFriends] = useState(initialFriends);
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const handleShowAddFriend = () => {
+    setShowAddFriend(!showAddFriend);
+  };
+
+  const handleAddFriend = (friend) => {  // 👈🏽 ✅
+    //no mutate the friends array, better create a new array with friends and new friend inside it.
+    setFriends((friends) => [...friends, friend]);  // 👈🏽 ✅
+  };
+
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList friends={friends} />
+
+        {showAddFriend && <FormAddFriend onAddFriend={handleAddFriend} />}  // 👈🏽 ✅
+
+        <Button onClick={handleShowAddFriend}>{showAddFriend ? "Close" : "Add Friend"}</Button>
+      </div>
+      <FormSplitBill />
+    </div>
+  );
+}
+export default App;
+```
+
+2. Meanwhile the `onAddFriend` function is sent as prop to `FormAddFriend` component:
+```jsx
+/* src/components/FormAddFriend.jsx */
+import Button from "../common/Button";
+import { useState } from "react";
+const FormAddFriend = ({ onAddFriend }) => {
+  const [name, setName] = useState("");
+  const [image, setImage] = useState("https://i.pravatar.cc/48");
+  const handleSubmit = (e) => {
+    e.preventDefault(); // prevent the default behavior of the form
+    //validation: if the name or image is empty, return
+    if (!name || !image) return;
+    //create new id:
+    const id = crypto.randomUUID();
+    //create new friend object:
+    const newFriend = {
+      id,
+      name,
+      image: `${image}?=${id}`,
+      balance: 0,
+    };
+    console.log(newFriend);
+
+    onAddFriend(newFriend);  // 👈🏽 ✅
+
+    //Set the input values to the default state:
+    setName("");
+    setImage("https://i.pravatar.cc/48");
+  };
+  return (
+    <form className="form-add-friend" onSubmit={handleSubmit}>
+      <label>👫 Friend name</label>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)} />
+      <label>🌄 Image URL</label>
+      <input type="text" value={image} onChange={(e) => setImage(e.target.value)} />
+      <Button>Add</Button>
+    </form>
+  );
+};
+export default FormAddFriend;
+```
+
+
+
 ## 📚 Lecture 0
 ## 📚 Lecture 0
