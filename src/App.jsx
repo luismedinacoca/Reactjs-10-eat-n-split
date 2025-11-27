@@ -34,6 +34,7 @@ function App() {
   const handleAddFriend = (friend) => {
     //no mutate the friends array, better create a new array with friends and new friend inside it.
     setFriends((friends) => [...friends, friend]);
+    setShowAddFriend(false);
   };
   return (
     <div className="app">
