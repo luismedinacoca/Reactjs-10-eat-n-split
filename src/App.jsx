@@ -34,16 +34,24 @@ function App() {
   };
 
   const handleAddFriend = (friend) => {
-    //no mutate the friends array, better create a new array with friends and new friend inside it.
     setFriends((friends) => [...friends, friend]);
     setShowAddFriend(false);
   };
 
   const handleSelection = (friend) => {
-    //setSelectedFriend(friend);
-    //setSelectedFriend((current) => (current.id === friend.id ? null : friend));
     setSelectedFriend((current) => (current?.id === friend.id ? null : friend));
     setShowAddFriend(false);
+  };
+
+  const handleSplitBill = (value) => {
+    console.log(value);
+
+    //no mutate the friends array, better create a new array with friends and new friend inside it.
+    setFriends((friends) =>
+      friends.map((friend) => (friend.id === selectedFriend.id ? { ...friend, balance: friend.balance + value } : friend))
+    );
+    //reset the selected friend
+    setSelectedFriend(null);
   };
 
   return (
@@ -53,7 +61,7 @@ function App() {
         {showAddFriend && <FormAddFriend onAddFriend={handleAddFriend} />}
         <Button onClick={handleShowAddFriend}>{showAddFriend ? "Close" : "Add Friend"}</Button>
       </div>
-      {selectedFriend && <FormSplitBill selectedFriend={selectedFriend} />}
+      {selectedFriend && <FormSplitBill selectedFriend={selectedFriend} onSplitBill={handleSplitBill} />}
     </div>
   );
 }
