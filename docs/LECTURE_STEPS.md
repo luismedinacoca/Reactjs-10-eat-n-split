@@ -1148,14 +1148,149 @@ function App() {
 export default App;
 ```
 
+## 📚 Lecture 101: Creating Controlled Elements
+
+### 1. Create states for each element in `FormSplitBill`
+```jsx
+/* src/components/FormSplitBill.jsx */
+import Button from "../common/Button";
+import { useState } from "react";  // 👈🏽 ✅ (1)
+const FormSplitBill = ({ selectedFriend }) => {
+  const [bill, setBill] = useState(0);  // 👈🏽 ✅ (1)
+  const [paidByUser, setPaidByUser] = useState(0);  // 👈🏽 ✅ (1)
+  const [whoIsPaying, setWhoIsPaying] = useState("user");  // 👈🏽 ✅ (1)
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with {selectedFriend.name}</h2>
+      <label>💰 Bill value</label>
+      <input type="text" value={bill} onChange={(e) => setBill(e.target.value)} />  // 👈🏽 ✅ (2)
+      <label>🙋🏽‍♂️ Your expense</label>
+      <input type="text" value={paidByUser} onChange={(e) => setPaidByUser(e.target.value)} />  // 👈🏽 ✅ (2)
+      <label>👥 {selectedFriend.name}'s expense</label>
+      <input type="text" disabled />
+      <label>🤑 Who is paying the bill?</label>
+      <select value={whoIsPaying} onChange={(e) => setWhoIsPaying(e.target.value)}>  // 👈🏽 ✅ (2)
+        <option value="user">You</option>
+        <option value="friend">{selectedFriend.name}</option>
+      </select>
+      <Button>Split Bill</Button>
+    </form>
+  );
+};
+export default FormSplitBill;
+```
+
+<img src="../img/section08-lecture101-001.png">
+
+#### 1.1. Value in `bill` and `paidByUser` are _still_ `string` no `numbers`:
+```jsx
+/*  */
+import Button from "../common/Button";
+import { useState } from "react";
+const FormSplitBill = ({ selectedFriend }) => {
+  const [bill, setBill] = useState(0);
+  const [paidByUser, setPaidByUser] = useState(0);
+  const [whoIsPaying, setWhoIsPaying] = useState("user");
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with {selectedFriend.name}</h2>
+      <label>💰 Bill value</label>
+      <input type="text" value={bill} onChange={(e) => setBill(Number(e.target.value))} />  // 👈🏽 ✅ (2)
+      <label>🙋🏽‍♂️ Your expense</label>
+      <input type="text" value={paidByUser} onChange={(e) => setPaidByUser(Number(e.target.value))} />  // 👈🏽 ✅ (2)
+      <label>👥 {selectedFriend.name}'s expense</label>
+      <input type="text" disabled />
+      <label>🤑 Who is paying the bill?</label>
+      <select value={whoIsPaying} onChange={(e) => setWhoIsPaying(e.target.value)}>
+        <option value="user">You</option>
+        <option value="friend">{selectedFriend.name}</option>
+      </select>
+      <Button>Split Bill</Button>
+    </form>
+  );
+};
+export default FormSplitBill;
+```
+
+#### 1.2. Getting the paidByFriend value:
+```jsx
+/* src/components/FormSplitBill.jsx */
+import Button from "../common/Button";
+import { useState } from "react";
+const FormSplitBill = ({ selectedFriend }) => {
+  const [bill, setBill] = useState("");
+  const [paidByUser, setPaidByUser] = useState("");
+  let payByFriend = bill ? bill - paidByUser : "";  // 👈🏽 ✅
+  const [whoIsPaying, setWhoIsPaying] = useState("user");
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with {selectedFriend.name}</h2>
+      <label>💰 Bill value</label>
+      <input type="text" value={bill} onChange={(e) => setBill(Number(e.target.value))} />
+      <label>🙋🏽‍♂️ Your expense</label>
+      <input type="text" value={paidByUser} onChange={(e) => setPaidByUser(Number(e.target.value))} />
+      <label>👥 {selectedFriend.name}'s expense</label>
+      <input type="text" disabled value={payByFriend} />  // 👈🏽 ✅
+      <label>🤑 Who is paying the bill?</label>
+      <select value={whoIsPaying} onChange={(e) => setWhoIsPaying(e.target.value)}>
+        <option value="user">You</option>
+        <option value="friend">{selectedFriend.name}</option>
+      </select>
+
+      <Button>Split Bill</Button>
+    </form>
+  );
+};
+export default FormSplitBill;
+```
 
 
+### 2. input value Validation:
+```jsx
+/*  */
+import Button from "../common/Button";
+import { useState } from "react";
+const FormSplitBill = ({ selectedFriend }) => {
+  const [bill, setBill] = useState("");
+  const [paidByUser, setPaidByUser] = useState(0);
+  let payByFriend = bill ? bill - paidByUser : "";
+  const [whoIsPaying, setWhoIsPaying] = useState("user");
+  return (
+    <form className="form-split-bill">
+      <h2>Split a bill with {selectedFriend.name}</h2>
+      <label>💰 Bill value</label>
+      <input type="text" value={bill} onChange={(e) => setBill(Number(e.target.value))} />
+      <label>🙋🏽‍♂️ Your expense</label>
+      <input
+        type="text"
+        value={paidByUser}
+        onChange={(e) => setPaidByUser(Number(e.target.value) > bill ? paidByUser : Number(e.target.value))}  // 👈🏽 ✅
+      />
+      <label>👥 {selectedFriend.name}'s expense</label>
+      <input type="text" disabled value={payByFriend} />
+      <label>🤑 Who is paying the bill?</label>
+      <select value={whoIsPaying} onChange={(e) => setWhoIsPaying(e.target.value)}>
+        <option value="user">You</option>
+        <option value="friend">{selectedFriend.name}</option>
+      </select>
+
+      <Button>Split Bill</Button>
+    </form>
+  );
+};
+export default FormSplitBill;
+```
+
+> Explain as:
+
+```js
+(new value > bill) ? "keep old value" : "accept new value"
+```
 
 
+> 🔥 Issue:
 
-
-
-
+Click in another friend and `FormSplitBill` keeps their inputs values.
 
 
 
@@ -1182,3 +1317,5 @@ export default App;
 /*  */
 
 ```
+
+
