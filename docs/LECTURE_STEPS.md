@@ -1649,6 +1649,104 @@ export default App;
 - [ ] Document the invariant: keep `key` stable + unique per friend (do not use array index). Location: `src/App.jsx` L65.
 
 
+<br>
+
+## 🔧 02. Lesson 134 — _Rules for Render Logic: Pure Component_
+
+### 🧠 02.1 Context:
+
+In React, a component should behave like a **pure function** with respect to its **render logic**:
+
+- Same **inputs** (props, state, context) → same **output** (JSX/UI).
+- The render phase must be **predictable** and **free of side effects**.
+
+This matters because React may render components **multiple times** (and sometimes in ways you don’t expect) in order to:
+- Reconcile UI changes efficiently
+- Prepare for concurrent rendering features
+- Keep the UI consistent while state updates happen
+
+If render logic is not pure, you can get bugs that are hard to reproduce (double requests, duplicated logs, random UI changes, or state getting out of sync).
+
+#### The two types of logic (and where side effects are allowed)
+
+React components usually contain:
+
+1. **Render logic** (must be pure): everything that runs while React is computing JSX.
+2. **Event handlers** (side effects allowed): code triggered by user interaction or events.
+
+In this project:
+- **Pure render logic examples**:
+  - `Friend` renders conditional UI based on `friend.balance` (pure computation like `Math.abs(...)`) (`src/components/Friend.jsx`).
+  - `FormSplitBill` derives `paidByFriend` from `bill` and `paidByUser` (derived values are OK) (`src/components/FormSplitBill.jsx`).
+- **Side effects kept out of render** (good):
+  - `crypto.randomUUID()` is used inside `handleSubmit` (event handler) in `FormAddFriend`, not during render (`src/components/FormAddFriend.jsx` L7-L30).
+  - `console.log(value)` is inside `handleSplitBill` (event handler) in `App` (`src/App.jsx` L46-L55).
+
+#### Rules of thumb for “pure render logic”
+
+- **Do not mutate** props/state/variables that are shared across renders.
+  - Bad: `friends.push(...)` in render; Good: create new arrays/objects in event handlers (`setFriends(prev => [...prev, newFriend])`).
+- **Do not perform side effects** during render:
+  - No network calls, no subscriptions, no timers, no DOM manipulation, no writing to storage, no global mutations.
+- **Do not use non-deterministic values** during render:
+  - Avoid `Math.random()`, `Date.now()`, `crypto.randomUUID()` in render output.
+  - If you need them, generate them in an event handler or in an effect, then store in state.
+- **Derived data is fine**:
+  - Computing values from props/state (like `paidByFriend` or `Math.abs(balance)`) is pure and recommended.
+
+#### Advantages / Disadvantages
+
+- **Pros**:
+  - Predictable UI; easier debugging
+  - Works correctly with React’s rendering behavior (including re-renders and potential double-invocations in dev)
+  - Safer refactors and future React features
+- **Cons**:
+  - Requires discipline: move side effects to event handlers or effects
+  - Sometimes feels “indirect” (compute first, then render) but pays off long-term
+
+#### Alternatives / when to do something else
+
+- If you need side effects based on props/state changes, use **effects** (`useEffect`) instead of render logic.
+- If you need to compute expensive derived data, consider memoization (`useMemo`) — still pure, but used for performance only when needed.
+
+### ⚙️ 02.2 Updating code according the context:
+
+#### 02.2.1 The **Two Types** of logic in React components:
+
+1. Render logic
+2. Event Handler Functions
+
+![Two Types of logic in React components](../img/section11-lecture134-001.png)
+
+#### 02.2.2 **Refresher**: functional programming principles
+1. side effect
+2. Pure functions
+
+![Refresher - functional programming principles](../img/section11-lecture134-002.png)
+
+#### 02.2.3 **Rules** for render logic:
+1. components must be pure when it comes to render logic.
+2. Render logic must produce no side effects.
+
+![Rules for render logic](../img/section11-lecture134-003.png)
+
+### 🐞 02.3 Issues:
+
+- **No render-phase side effects detected in current implementation**: current components do not perform I/O (fetch/storage/DOM mutations) during render; side-effectful code is confined to event handlers (good).
+
+| Issue | Status | Log/Error |
+| ----- | ------ | --------- |
+| Render logic is pure (no side effects in render) | ℹ️ OK | Checked `src/App.jsx`, `src/components/Friend.jsx`, `src/components/FormSplitBill.jsx`, `src/components/FormAddFriend.jsx`. Side effects found (`crypto.randomUUID()`, `console.log`) occur inside handlers, not during render. |
+| Debug logging in event handlers | ℹ️ Low Priority | `console.log(value)` in `src/App.jsx` L47 can be noisy in production; it’s not a render purity bug, but consider removing before shipping. |
+
+### 🧱 02.4 Pending Fixes (TODO)
+
+- [ ] Remove debug `console.log(value)` from `handleSplitBill` in `src/App.jsx` (around L46-L55) before production release.
+- [ ] Add a short code-review guideline note: “No side effects in render logic; use event handlers or `useEffect`” (applies to `src/App.jsx`, `src/components/*`).
+- [ ] (Optional) Add ESLint configuration to warn on `console.log` in production builds (file: `eslint.config.js`).
+
+
+
 
 
 
