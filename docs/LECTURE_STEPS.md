@@ -1505,3 +1505,193 @@ function App() {
 }
 export default App;
 ```
+
+---
+
+<br>
+
+# 🧑🏾‍💻 Section 11: How react Works behind the Scenes
+
+<br>
+
+## 🔧 01. Lesson 133 — _Using the Key prop to fix our Eat-'N-Split app_
+
+### 🧠 01.1 Context:
+
+In React, the `key` prop is primarily used to help React identify elements between renders during the reconciliation process. Most commonly, we pass `key` when rendering lists (e.g. `friends.map(...)`) so React can:
+
+- Keep the correct element/component instance associated with the correct data item.
+- Reorder/insert/remove items efficiently without accidentally reusing the wrong DOM or component state.
+
+However, `key` can also be used intentionally to **force React to recreate (remount) a component** when some “identity” changes. This is useful when a component has **local state** (`useState`) that should be reset when the underlying “entity” changes.
+
+#### Why this matters in Eat-'N-Split
+
+`FormSplitBill` manages local state for the inputs:
+- `bill`
+- `paidByUser`
+- `whoIsPaying`
+
+When you select a different friend, the component receives a different `selectedFriend` prop, but **React can reuse the same component instance**, meaning the `useState` values can persist and the inputs remain filled. This is a UX bug because you end up seeing the previous friend’s bill values.
+
+By rendering `FormSplitBill` with a stable `key` tied to the selected friend id (e.g. `key={selectedFriend.id}`), React treats it as a **different component instance per friend**, so it gets unmounted/mounted and all local state resets to the initial values.
+
+#### Pros / Cons
+
+- **Pros**:
+  - Very simple and explicit reset behavior.
+  - Avoids extra effect logic (`useEffect`) just to reset inputs.
+  - Keeps form state encapsulated in the form component.
+- **Cons**:
+  - Remounting resets *all* local state (including focus, touched/dirty state, etc.).
+  - If the component had expensive initialization, remounting could be undesirable.
+
+#### Alternatives to consider
+
+- Reset form state in `FormSplitBill` when `selectedFriend` changes using `useEffect`.
+- Lift the form state up to `App` so the parent fully controls the form inputs (more verbose, but explicit).
+- Use a reducer (`useReducer`) and dispatch a `RESET` action on friend changes (good for more complex forms).
+
+### ⚙️ 01.2 Updating code according the context:
+
+#### 01.2.1 Adding `selectedFriend.id` as `key` in `FormSplitBill`:
+
+According what we see in section  11 - Lecture 132 for `How-react-works` project with each tab in order to get the `TabContent` for each tab:
+
+```jsx
+/* src/App.jsx */
+import FriendsList from "./components/FriendsList";
+import FormAddFriend from "./components/FormAddFriend";
+import Button from "./common/Button";
+import FormSplitBill from "./components/FormSplitBill";
+import { useState } from "react";
+const initialFriends = [
+  {
+    id: 118836,
+    name: "Clark",
+    image: "https://i.pravatar.cc/48?u=118836",
+    balance: -7,
+  },
+  {
+    id: 933372,
+    name: "Sarah",
+    image: "https://i.pravatar.cc/48?u=933372",
+    balance: 20,
+  },
+  {
+    id: 499476,
+    name: "Anthony",
+    image: "https://i.pravatar.cc/48?u=499476",
+    balance: 0,
+  },
+];
+function App() {
+  const [friends, setFriends] = useState(initialFriends);
+  const [showAddFriend, setShowAddFriend] = useState(false);
+  const [selectedFriend, setSelectedFriend] = useState(null);
+  const handleShowAddFriend = () => {
+    setShowAddFriend(!showAddFriend);
+  };
+  const handleAddFriend = (friend) => {
+    setFriends((friends) => [...friends, friend]);
+    setShowAddFriend(false);
+  };
+  const handleSelection = (friend) => {
+    setSelectedFriend((current) => (current?.id === friend.id ? null : friend));
+    setShowAddFriend(false);
+  };
+  const handleSplitBill = (value) => {
+    console.log(value);
+    //no mutate the friends array, better create a new array with friends and new friend inside it.
+    setFriends((friends) =>
+      friends.map((friend) => (friend.id === selectedFriend.id ? { ...friend, balance: friend.balance + value } : friend))
+    );
+    //reset the selected friend
+    setSelectedFriend(null);
+  };
+  return (
+    <div className="app">
+      <div className="sidebar">
+        <FriendsList friends={friends} onSelection={handleSelection} selectedFriend={selectedFriend} />
+        {showAddFriend && <FormAddFriend onAddFriend={handleAddFriend} />}
+        <Button onClick={handleShowAddFriend}>{showAddFriend ? "Close" : "Add Friend"}</Button>
+      </div>
+      {selectedFriend && (
+        <FormSplitBill 
+          selectedFriend={selectedFriend} 
+          onSplitBill={handleSplitBill} 
+          key={selectedFriend.id}   {/* 👈🏽 ✅ */}
+        />   
+      )}
+    </div>
+  );
+}
+export default App;
+```
+
+- First split a bill with `Clark` and fill all data:
+![](../img/section11-lecture133-001.png)
+
+- Then click on `Anthony` and verify the Split a bill form is empty:
+![](../img/section11-lecture133-002.png)
+
+### 🐞 01.3 Issues:
+
+- **Form inputs persist when switching friends (before using `key`)**: `FormSplitBill` has local state for inputs, and when `selectedFriend` changes React may reuse the same component instance, causing previously entered values to remain visible (UX bug).
+
+| Issue | Status | Log/Error |
+| ----- | ------ | --------- |
+| `FormSplitBill` keeps previous input values when selecting another friend | ✅ Fixed | No runtime error. Repro: fill inputs for Friend A, then select Friend B → inputs still filled. Fix: render `FormSplitBill` with `key={selectedFriend.id}` in `src/App.jsx` (see `src/App.jsx` L64-L66). |
+
+### 🧱 01.4 Pending Fixes (TODO)
+
+- [ ] Verify regression manually: select Friend A, type values in `FormSplitBill`, then select Friend B and confirm the form is reset (file: `src/App.jsx`, around `FormSplitBill` render, L64-L66).
+- [ ] Document the invariant: keep `key` stable + unique per friend (do not use array index). Location: `src/App.jsx` L65.
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+🔥 🔥 🔥
+
+<br>
+
+## 🔧 XX. Lesson YYY — _{{TITLE_NAME}}_
+
+### 🧠 XX.1 Context:
+
+### ⚙️ XX.2 Updating code according the context:
+
+#### XX.2.1
+
+```tsx
+/*  */
+```
+
+#### XX.2.2
+
+```tsx
+/*  */
+```
+
+### 🐞 XX.3 Issues:
+
+- **first issue**: something..
+
+| Issue | Status | Log/Error |
+| ----- | ------ | --------- |
+
+### 🧱 XX.4 Pending Fixes (TODO)
+
+- [ ]
+
