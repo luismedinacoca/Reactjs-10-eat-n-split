@@ -1745,6 +1745,86 @@ In this project:
 - [ ] Add a short code-review guideline note: “No side effects in render logic; use event handlers or `useEffect`” (applies to `src/App.jsx`, `src/components/*`).
 - [ ] (Optional) Add ESLint configuration to warn on `console.log` in production builds (file: `eslint.config.js`).
 
+<br>
+
+## 🔧 03. Lesson 135 — _State Update Batching_
+
+### 🧠 03.1 Context:
+
+In React, calling a state setter (e.g. `setShowAddFriend(...)`) does **not** immediately change the state variable in the same synchronous call stack. Instead, React **queues** the update and schedules a re-render.
+
+To avoid unnecessary re-renders, React groups multiple state updates that happen close together into a single render. This behavior is called **State Update Batching**.
+
+#### What “batching” means (practically)
+If you call multiple state setters inside the same event handler, React will usually:
+- Apply all queued updates together, and
+- Re-render **once** (instead of re-rendering after each `setState` call).
+
+This is why it’s normal (and recommended) to write event handlers that update multiple pieces of state.
+
+#### Why state updates feel “asynchronous”
+Because updates are queued, reading state immediately after calling a setter often returns the **previous** value (the current render’s snapshot). This is expected.
+
+#### React 18 automatic batching (important)
+Before React 18, batching primarily happened inside React event handlers.
+In React 18, **automatic batching** can also happen for updates inside:
+- `setTimeout`
+- Promises (`then`, `async/await`)
+- native event handlers
+- other async boundaries
+
+#### The key rule: use functional updates when next state depends on previous state
+If the next state is derived from the previous state, always prefer:
+
+- `setX(prev => ...)`
+
+This avoids “stale state” bugs when multiple updates are batched.
+
+#### Pros / Cons
+- **Pros**:
+  - Fewer re-renders → better performance and smoother UI
+  - Encourages grouping related state changes in one handler
+- **Cons**:
+  - Can surprise you if you expect state to update immediately
+  - Can introduce stale-state bugs if you use `setX(x + 1)` patterns repeatedly
+
+#### Alternatives / Escape hatches
+- Use **functional updates** (`setState(prev => ...)`) for correctness.
+- Use `useEffect` when you need to “react” to a committed state change.
+- In rare cases, you can opt out of batching with `flushSync` (advanced; use sparingly).
+
+### ⚙️ 03.2 Updating code according the context:
+
+#### 03.2.1 How State Updates are **BATCHED**
+![How State Updates are BATCHED](../img/section11-lecture135-001.png)
+
+![How State Updates are BATCHED](../img/section11-lecture135-002.png)
+
+![How State Updates are BATCHED](../img/section11-lecture135-003.png)
+
+#### 03.2.2 Updating state is **Asynchronous**
+![Updating state is Asynchronous](../img/section11-lecture135-004.png)
+
+#### 03.2.3 Batching **beyond** event handler functions:
+![Batching **beyond** event handler functions](../img/section11-lecture135-005.png)
+
+
+### 🐞 03.3 Issues:
+
+- **Potential stale state toggle when using `setShowAddFriend(!showAddFriend)`**: when the next state depends on the previous state, non-functional updates can produce incorrect results under batching or rapid repeated updates.
+
+| Issue | Status | Log/Error |
+| ----- | ------ | --------- |
+- Stale-state risk in toggle handler (`setShowAddFriend(!showAddFriend)`) | ⚠️ Identified | No runtime error. Risk: if multiple toggles are queued/batched, they may all read the same old `showAddFriend` snapshot. Fix: use functional update `setShowAddFriend(prev => !prev)` in `src/App.jsx` (around L32-L34). |
+| Multiple state updates in one handler (batched re-render) | ℹ️ OK | `handleSelection` and `handleSplitBill` update multiple states; this is valid and typically results in a single re-render. Just avoid relying on reading “updated” state immediately after setters (`src/App.jsx` around L41-L55). |
+
+### 🧱 03.4 Pending Fixes (TODO)
+
+- [ ] Update toggle to functional state update: change `setShowAddFriend(!showAddFriend)` to `setShowAddFriend(prev => !prev)` (file: `src/App.jsx`, around L32-L34).
+- [ ] Add a short inline comment (or doc note) near the toggle explaining why functional updates are preferred when depending on previous state (file: `src/App.jsx`, same area).
+- [ ] (Optional) Remove `console.log(value)` from `handleSplitBill` to keep handlers clean while discussing batching behavior (file: `src/App.jsx`, around L46-L48).
+
+
 
 
 
